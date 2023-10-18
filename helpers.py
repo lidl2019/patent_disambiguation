@@ -1,0 +1,75 @@
+from datetime import datetime
+
+import torch
+from Patent_Dataset import PatentsDataset
+import math
+from fuzzywuzzy import fuzz
+import numpy as np
+
+def co_inventors_similarity(nlist1, nlist2):
+    total_similarity = 0
+    for str1 in nlist1:
+        for str2 in nlist2:
+            total_similarity += name_similarity(str1, str2)
+    average_similarity = total_similarity / (len(nlist1) * len(nlist2))
+    return 1 - average_similarity
+
+def coinventors_in_common(list1, list2):
+
+    ans = 0
+
+    for n in list1:
+        if n != "NA" and n in list2:
+            ans += 1
+
+    return ans
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371  # Radius of the Earth in kilometers
+
+    d_lat = math.radians(lat2 - lat1)
+    d_lon = math.radians(lon2 - lon1)
+
+    a = math.sin(d_lat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    distance = R * c
+    return distance
+
+
+def location_similarity(lat1, lon1, lat2, lon2):
+    distance = haversine_distance(lat1, lon1, lat2, lon2)
+
+    # The greatest possible haversine distance on Earth is half the circumference, roughly 20037.5 km.
+    max_distance = 20037.5
+
+    # Normalize the distance to get the similarity score.
+    score = distance / max_distance
+
+    return score
+
+def timestamp_similarity(t1, t2):
+    day1 = datetime.strptime(t1,'%Y-%m-%d')
+    day2 = datetime.strptime(t2, '%Y-%m-%d')
+    difference = abs((day1 - day2).total_seconds())
+
+    decay_factor = 0.00000001
+    similarity = np.exp(-decay_factor * difference)
+    return 1 - similarity
+def row_to_features(row):
+    # name_tensor = torch.tensor([(ord(row['disambig_inventor_name_first'][0].lower()) - ord('a')), (ord(row['disambig_inventor_name_last'][0].lower()) - ord('a'))])
+    title_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_title"]))
+    abstract_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_abstract"]))
+    # male_flag_tensor = torch.tensor([float(row["male_flag"])])
+    features = torch.cat((title_tensor, abstract_tensor), dim=0)
+#     print(title_tensor)
+    return features
+
+
+def name_to_list(s: str):
+    s = s.strip("[]")
+    list_of_names = [i for i in s.split("'") if len(i) > 0 and "," not in i]
+    return list_of_names
+
+def name_similarity(n1, n2):
+    return 1 - fuzz.ratio(n1, n2) / 100.0
