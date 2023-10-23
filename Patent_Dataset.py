@@ -17,7 +17,9 @@ class PatentsDataset(Dataset):
             self.data[row["inventor_id"]].append([self.row_id_to_features(index),
                                                   row["patent_date"],
                                                   row["co_inventors"],
-                                                  row["latitude"], row["longitude"]
+                                                  row["latitude"], row["longitude"],
+                                                  row["patent_title"],
+                                                  row["patent_abstract"]
                                                   ])
 
     #         self.fullset = {}
