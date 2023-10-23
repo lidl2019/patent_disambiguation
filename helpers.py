@@ -1,3 +1,4 @@
+import collections
 from datetime import datetime
 
 import torch
@@ -35,6 +36,32 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
     distance = R * c
     return distance
+
+def cosine_similarity(str1, str2):
+    words1 = str1.split()
+    words2 = str2.split()
+
+    # Create word count vectors
+    counter1 = collections.Counter(words1)
+    counter2 = collections.Counter(words2)
+
+    # Get the set of all words
+    all_words = set(counter1.keys()).union(set(counter2.keys()))
+
+    # Create vectors for both strings
+    vector1 = [counter1[word] for word in all_words]
+    vector2 = [counter2[word] for word in all_words]
+
+    # Calculate the dot product and magnitude of both vectors
+    dot_product = sum([vector1[i] * vector2[i] for i in range(len(vector1))])
+    magnitude1 = math.sqrt(sum([vector1[i] * vector1[i] for i in range(len(vector1))]))
+    magnitude2 = math.sqrt(sum([vector2[i] * vector2[i] for i in range(len(vector2))]))
+
+    # Calculate cosine similarity
+    if magnitude1 * magnitude2 == 0:
+        return 0  # To handle the case where one or both vectors are all zeros
+    else:
+        return dot_product / (magnitude1 * magnitude2)
 
 
 def location_similarity(lat1, lon1, lat2, lon2):
