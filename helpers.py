@@ -15,6 +15,17 @@ def co_inventors_similarity(nlist1, nlist2):
     average_similarity = total_similarity / (len(nlist1) * len(nlist2))
     return 1 - average_similarity
 
+
+def get_baseline_x_y(df):
+    x = df[["title_similarity","abstract_similarity", "date_similarity", "coinventor_in_common", "location_similarities"]]
+    y_ = df["labels"].tolist()
+    y = []
+
+    for r in y_:
+        cur = int(float(r.strip("[]")))
+        y.append(cur)
+
+    return x, y
 def coinventors_in_common(list1, list2):
 
     ans = 0

@@ -8,7 +8,28 @@ from data_preprocessing import Config
 from Patent_Network import *
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+class Baseline():
 
+    def __init__(self, train_path, test_path):
+        self.model = LogisticRegression()
+        self.train_df = pd.read_csv(train_path)
+        self.test_df = pd.read_csv(test_path)
+    def fit(self, remove_duplicates = False):
+        if remove_duplicates:
+            self.train_df.drop_duplicates(inplace=True)
+
+        x_train, y_train = helpers.get_baseline_x_y(self.train_df)
+        self.model.fit(x_train, y_train)
+
+    def predict(self, remove_duplicates = False):
+        if remove_duplicates:
+            self.test_df.drop_duplicates(inplace=True)
+        x_test, y_test = helpers.get_baseline_x_y(self.test_df)
+        y_pred = self.model.predict(x_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f"Accuracy: {accuracy * 100:.2f}%")
 
 class Model():
     def __init__(self, traindataloader, testdataloader):
