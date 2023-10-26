@@ -2,7 +2,7 @@ import pandas as pd
 import torch.cuda
 from tqdm import tqdm
 from sklearn.metrics import classification_report
-
+from sentence_transformers import SentenceTransformer
 import helpers
 from data_preprocessing import Config
 from Patent_Network import *
@@ -10,6 +10,18 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+
+
+class Encoder_Model():
+    def __init__(self, name="all-MiniLM-L6-v2"):
+        self.model = SentenceTransformer(name)
+
+    def encode(self, text):
+        return [round(i, 4) for i in self.model.encode(text)]
+
+    def encode_to_str(self, text):
+        return str(self.encode(text))
+
 class Baseline():
 
     def __init__(self, train_path, test_path):

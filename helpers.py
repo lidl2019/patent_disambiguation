@@ -1,11 +1,12 @@
 import collections
 from datetime import datetime
-
+from sentence_transformers import SentenceTransformer
 import torch
 from Patent_Dataset import PatentsDataset
 import math
 from fuzzywuzzy import fuzz
 import numpy as np
+
 
 def co_inventors_similarity(nlist1, nlist2):
     total_similarity = 0
@@ -111,3 +112,47 @@ def name_to_list(s: str):
 
 def name_similarity(n1, n2):
     return 1 - fuzz.ratio(n1, n2) / 100.0
+
+
+def get_coinventors(df, map):
+    coinventor_list = []
+    for index, row in df.iterrows():
+        cur_co_inventors = []
+        cur_name = (row["disambig_inventor_name_first"] + " " if len(row["disambig_inventor_name_first"]) > 0
+                    else "") + (row["disambig_inventor_name_last"] if len(row["disambig_inventor_name_last"]) > 0
+                                else "")
+
+        if len(map[row["patent_id"]]) == 1:
+            cur_co_inventors.append("NA")
+        else:
+            for n in map[row["patent_id"]]:
+                if n != cur_name:
+                    cur_co_inventors.append(n)
+        coinventor_list.append(str(cur_co_inventors))
+
+    df["co_inventors"] = coinventor_list
+
+    return df
+
+
+def get_inventors_from_patent_id(df):
+    unique_patent_id = set(df["patent_id"].tolist())
+    patent_inventor_map = {}
+    for id in unique_patent_id:
+        patent_inventor_map[id] = []
+
+    for index, row in df.iterrows():
+
+        patent_inventor_map[row["patent_id"]].append((row["disambig_inventor_name_first"] + " "
+                                                      if len(row["disambig_inventor_name_first"]) > 0 else "") +
+                                                     (row["disambig_inventor_name_last"]
+                                                      if len(row["disambig_inventor_name_last"]) > 0 else "")
+                                                     )
+
+    return patent_inventor_map
+
+
+def generate_coinventor_col(df):
+    map = get_inventors_from_patent_id(df)
+
+    return get_coinventors(df, map)
