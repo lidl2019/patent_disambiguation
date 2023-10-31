@@ -45,9 +45,9 @@ if __name__ == '__main__':
 
     # set_data_for_baseline(Config.BASE_TRAIN_PATH, train_dataloader)
     # set_data_for_baseline(Config.BASE_TEST_PATH, test_dataloader)
-
-    # start the baseline
-
+    #
+    # # start the baseline
+    #
     # Baseline_model = Baseline(Config.BASE_TRAIN_PATH, Config.BASE_TEST_PATH)
     # Baseline_model.fit(remove_duplicates=True)
     # Baseline_model.predict(remove_duplicates=True)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # Model
     Patent_Model = Model(train_dataloader, test_dataloader)
 
-    # Patent_Model.train(epoch=10, from_pretrain=False)
+    # Patent_Model.train(epoch=30, from_pretrain=True)
     Patent_Model.test_ROC_Curve(from_pretrain=True)
 
     # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)

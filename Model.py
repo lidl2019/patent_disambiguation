@@ -4,7 +4,7 @@ from tqdm import tqdm
 from sklearn.metrics import classification_report
 from sentence_transformers import SentenceTransformer
 import helpers
-from data_preprocessing import Config
+from Configuration import Config
 from Patent_Network import *
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ class Baseline():
         x_test, y_test = helpers.get_baseline_x_y(self.test_df)
         y_pred = self.model.predict(x_test)
         accuracy = accuracy_score(y_test, y_pred)
-        print(f"Accuracy: {accuracy * 100:.2f}%")
+        print(f"Baseline Accuracy: {accuracy * 100:.2f}%")
 
 class Model():
     def __init__(self, traindataloader, testdataloader):
