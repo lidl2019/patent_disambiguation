@@ -1,5 +1,5 @@
 class Config():
-    PATH_TO_CHECKPT = "checkpoint/checkpoint2.pth"
+    PATH_TO_CHECKPT = "checkpoint/checkpoint3.pth"
     EPOCH = 10
     LEARNING_RATE = 0.001
     RAW_DATA_PATH = "data/newdata/filterd_with_coinventors_500000.csv"

@@ -33,7 +33,7 @@ class PatentsDataset(Dataset):
             c2 = [list(c) for c in combinations]
 
             for inventions_pair in c2:
-                inventions_pair.append(1)
+                inventions_pair.append(0)
                 self.same_inventor_list.append(inventions_pair)
 
         random.shuffle(self.same_inventor_list)
@@ -55,7 +55,7 @@ class PatentsDataset(Dataset):
                     print(f"setting data: {(count / Config.DATASET_LENGTH) * 100} %")
 
             count += 1
-            self.diff_inventors_list.append([patent0, patent1, 0])
+            self.diff_inventors_list.append([patent0, patent1, 1])
 
         self.data_list = self.same_inventor_list + self.diff_inventors_list
 
@@ -64,7 +64,7 @@ class PatentsDataset(Dataset):
 
     def __len__(self):
         # return len(self.df)
-        return  len(self.data_list)
+        return len(self.data_list)
 
     def string_to_list(s: str):
         try:

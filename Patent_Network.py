@@ -30,13 +30,13 @@ class PatentNetwork(nn.Module):
             nn.ReLU(),
             nn.BatchNorm1d(1024),
 
-            nn.Linear(1024, 1024),
-            nn.ReLU(),
-            nn.BatchNorm1d(1024),
-
-            nn.Linear(1024, 1024),
-            nn.ReLU(),
-            nn.BatchNorm1d(1024),
+            # nn.Linear(1024, 1024),
+            # nn.ReLU(),
+            # nn.BatchNorm1d(1024),
+            #
+            # nn.Linear(1024, 1024),
+            # nn.ReLU(),
+            # nn.BatchNorm1d(1024),
 
             nn.Linear(1024, 1024),
             nn.ReLU(),
@@ -53,7 +53,7 @@ class PatentNetwork(nn.Module):
 
         self.fc2 = nn.Sequential(
             nn.Linear(256, 32),
-            nn.ReLU()
+            nn.Sigmoid()
         )
 
     def forward(self, x):
