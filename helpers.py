@@ -100,7 +100,10 @@ def row_to_features(row):
     title_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_title"]))
     abstract_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_abstract"]))
     # male_flag_tensor = torch.tensor([float(row["male_flag"])])
+    pos = torch.tensor([(row["latitude"] + 90)/180 , (row["longitude"]+180) / 360])
+
     features = torch.cat((title_tensor, abstract_tensor), dim=0)
+    features = torch.cat((features, pos), dim=0).to(torch.float32)
 #     print(title_tensor)
     return features
 

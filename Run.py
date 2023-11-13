@@ -35,28 +35,33 @@ if __name__ == '__main__':
     # preprocess_data()
     train_dataset = PatentsDataset(Config.train_data_path)
     test_dataset = PatentsDataset(Config.test_data_path)
+    validate_dataset = PatentsDataset(Config.validate_data_path)
+
 
     train_dataloader = DataLoader(train_dataset, shuffle=True, num_workers=Config.num_workers,
                                   batch_size=Config.train_batch_size, drop_last=True)
     test_dataloader = DataLoader(test_dataset, shuffle=True, num_workers=Config.num_workers,
                                   batch_size=Config.train_batch_size, drop_last=True)
 
+    validate_dataloader = DataLoader(validate_dataset, shuffle=True, num_workers=Config.num_workers,
+                                     batch_size=Config.train_batch_size, drop_last=True)
+
     print("dataloader initialized")
 
-    # set_data_for_baseline(Config.BASE_TRAIN_PATH, train_dataloader)
-    # set_data_for_baseline(Config.BASE_TEST_PATH, test_dataloader)
-    #
-    # # start the baseline
-    #
-    # Baseline_model = Baseline(Config.BASE_TRAIN_PATH, Config.BASE_TEST_PATH)
-    # Baseline_model.fit(remove_duplicates=True)
-    # Baseline_model.predict(remove_duplicates=True)
+    set_data_for_baseline(Config.BASE_TRAIN_PATH, train_dataloader)
+    set_data_for_baseline(Config.BASE_TEST_PATH, test_dataloader)
+
+    # start the baseline
+
+    Baseline_model = Baseline(Config.BASE_TRAIN_PATH, Config.BASE_TEST_PATH)
+    Baseline_model.fit(remove_duplicates=True)
+    Baseline_model.predict(remove_duplicates=True)
 
     # Model
-    Patent_Model = Model(train_dataloader, test_dataloader)
+    Patent_Model = Model(train_dataloader, test_dataloader, validate_dataloader)
 
-    Patent_Model.train(epoch=100, from_pretrain=True)
+    Patent_Model.train(epoch=50, from_pretrain=True)
     Patent_Model.test_ROC_Curve(from_pretrain=True)
 
-    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
-    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)
+    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
+    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)

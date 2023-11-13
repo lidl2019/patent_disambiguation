@@ -44,15 +44,23 @@ class Baseline():
         print(f"Baseline Accuracy: {accuracy * 100:.2f}%")
 
 class Model():
-    def __init__(self, traindataloader, testdataloader):
-        self.model = PatentNetwork()
+    def __init__(self, traindataloader, testdataloader, validationdataloader=None):
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.train_loader = traindataloader
         self.test_loader = testdataloader
-
+        self.valid_loader = validationdataloader
         self.criterion = ContrastiveLoss(margin=5)
+        self.valid = True if validationdataloader else False
 
+        self.dim = -1
+        for data in self.train_loader:
+            dim1, dim2, targets = data
 
+            self.dim = len(dim1[0][0])
+            print(f"input dimension = {self.dim}")
+            break
+        self.model = PatentNetwork(self.dim)
     def save_check_point(self, model, optimizer, filename=Config.PATH_TO_CHECKPT):
         print(f"saving weights to {filename}")
         checkpoint = {
@@ -140,6 +148,7 @@ class Model():
         iteration_number = 0.0
         device = self.device
         self.model.to(device)
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
         count = 0
         if from_pretrain:
@@ -151,7 +160,7 @@ class Model():
                     iterable=self.train_loader,
                     bar_format='{desc} {n_fmt:>4s}/{total_fmt:<4s} {percentage:3.0f}%|{bar}| {postfix}',
             ) as t:
-
+                self.model.train()
                 for data in self.train_loader:
                     patent0, patent1, label = data
                     if torch.cuda.is_available():
@@ -160,6 +169,8 @@ class Model():
                         patent0, patent1, label = patent0[0], patent1[0], label
 
                     self.optimizer.zero_grad()
+                    # print(patent0.shape)
+                    # print(patent1.shape)
                     output1 = self.model(patent0)
                     output2 = self.model(patent1)
 
@@ -171,6 +182,28 @@ class Model():
                     loss_history.append(loss_contrastive.item())
                     t.set_postfix_str(f"train_loss={sum(loss_history) / len(loss_history):.6f}")
                     t.update()
+
+                self.model.eval()
+                correct = 0
+                total = 0
+                with torch.no_grad():
+                    for data in self.valid_loader:
+                        patent0, patent1, label = data
+                        if torch.cuda.is_available():
+                            patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                        else:
+                            patent0, patent1, label = patent0[0], patent1[0], label
+
+                        output1 = self.model(patent0)
+                        output2 = self.model(patent1)
+                        euclidean_distance = nn.functional.pairwise_distance(output1, output2)
+                        predicted = (euclidean_distance > 2.5).float()  # Prediction logic reversed
+                        correct += (
+                                predicted.squeeze() == label.squeeze()).sum().item()  # Ensure label and predicted have the same dimensions
+                        total += label.size(0)
+
+                    print('\nTest Accuracy with threashold {:.4f}: {:.2f}%\n'.format(2.5, 100 * correct / total))
+
 
         self.save_check_point(model=self.model, optimizer=self.optimizer, filename=filename)
         plt.plot(counter, loss_history)
@@ -216,6 +249,7 @@ class Model():
         with torch.no_grad():
             for data in self.test_loader:
                 patent0, patent1, label = data
+
                 if torch.cuda.is_available():
                     patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
                 else:
