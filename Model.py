@@ -190,6 +190,9 @@ class Model():
                 patent0, patent1, label = data
                 if torch.cuda.is_available():
                     patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
+
                 output1 = self.model(patent0)
                 output2 = self.model(patent1)
                 euclidean_distance = nn.functional.pairwise_distance(output1, output2)
@@ -215,6 +218,9 @@ class Model():
                 patent0, patent1, label = data
                 if torch.cuda.is_available():
                     patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
+
                 output1 = self.model(patent0)
                 output2 = self.model(patent1)
                 euclidean_distance = nn.functional.pairwise_distance(output1, output2)
@@ -264,6 +270,9 @@ class Model():
                     p_dates0, p_dates1 = patent0[1], patent1[1]
                     if torch.cuda.is_available():
                         patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                    else:
+                        patent0, patent1, label = patent0[0], patent1[0], label
+
                     output1 = self.model(patent0)
                     output2 = self.model(patent1)
                     euclidean_distance = nn.functional.pairwise_distance(output1, output2)

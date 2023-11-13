@@ -18,11 +18,11 @@ import torch.nn.functional as F
 
 
 class PatentNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size = 768):
         super(PatentNetwork, self).__init__()
-
+        self.input_size = input_size
         self.fc1 = nn.Sequential(
-            nn.Linear(768, 1024),
+            nn.Linear(self.input_size, 1024),
             nn.ReLU(),
             nn.BatchNorm1d(1024),
 
@@ -55,6 +55,9 @@ class PatentNetwork(nn.Module):
             nn.Linear(256, 32),
             nn.Sigmoid()
         )
+
+    def set_dimension(self, size):
+        self.input_size = size
 
     def forward(self, x):
         output = self.fc1(x)

@@ -45,7 +45,7 @@ class PatentsDataset(Dataset):
         self.diff_inventors_list = []
         for i in range(len(self.same_inventor_list)):
             # get patents from different inventors
-            id0, id1 = random.sample(self.data.keys(), 2)
+            id0, id1 = random.sample(list(self.data.keys()), 2)
 
             patent0 = random.choice(self.data[id0])
             patent1 = random.choice(self.data[id1])
