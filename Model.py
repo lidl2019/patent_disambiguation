@@ -145,9 +145,12 @@ class Model():
     def train(self, epoch=Config.EPOCH, filename=Config.PATH_TO_CHECKPT, from_pretrain=False):
         counter = []
         loss_history = []
+
+        valid_history = []
         iteration_number = 0.0
         device = self.device
         self.model.to(device)
+        best_accuracy = 0
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
         count = 0
@@ -183,29 +186,35 @@ class Model():
                     t.set_postfix_str(f"train_loss={sum(loss_history) / len(loss_history):.6f}")
                     t.update()
 
-                self.model.eval()
-                correct = 0
-                total = 0
-                with torch.no_grad():
-                    for data in self.valid_loader:
-                        patent0, patent1, label = data
-                        if torch.cuda.is_available():
-                            patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
-                        else:
-                            patent0, patent1, label = patent0[0], patent1[0], label
+                if self.valid:
+                    self.model.eval()
+                    correct = 0
+                    total = 0
+                    with torch.no_grad():
+                        for data in self.valid_loader:
+                            patent0, patent1, label = data
+                            if torch.cuda.is_available():
+                                patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                            else:
+                                patent0, patent1, label = patent0[0], patent1[0], label
 
-                        output1 = self.model(patent0)
-                        output2 = self.model(patent1)
-                        euclidean_distance = nn.functional.pairwise_distance(output1, output2)
-                        predicted = (euclidean_distance > 2.5).float()  # Prediction logic reversed
-                        correct += (
-                                predicted.squeeze() == label.squeeze()).sum().item()  # Ensure label and predicted have the same dimensions
-                        total += label.size(0)
+                            output1 = self.model(patent0)
+                            output2 = self.model(patent1)
+                            euclidean_distance = nn.functional.pairwise_distance(output1, output2)
+                            predicted = (euclidean_distance > 2.5).float()  # Prediction logic reversed
+                            correct += (
+                                    predicted.squeeze() == label.squeeze()).sum().item()  # Ensure label and predicted have the same dimensions
+                            total += label.size(0)
+                        accuracy = 100*correct/total
+                        valid_history.append(accuracy)
+                        print('Test Accuracy with threashold {:.4f}: {:.2f}%'.format(2.5, accuracy))
+                        if accuracy >= best_accuracy:
+                            best_accuracy = accuracy
+                            self.save_check_point(model=self.model, optimizer=self.optimizer, filename=filename)
 
-                    print('\nTest Accuracy with threashold {:.4f}: {:.2f}%\n'.format(2.5, 100 * correct / total))
 
 
-        self.save_check_point(model=self.model, optimizer=self.optimizer, filename=filename)
+        # self.save_check_point(model=self.model, optimizer=self.optimizer, filename=filename)
         plt.plot(counter, loss_history)
         plt.savefig("training_result.png", dpi=300)
 

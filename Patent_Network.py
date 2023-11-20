@@ -30,13 +30,13 @@ class PatentNetwork(nn.Module):
             nn.ReLU(),
             nn.BatchNorm1d(1024),
 
-            # nn.Linear(1024, 1024),
-            # nn.ReLU(),
-            # nn.BatchNorm1d(1024),
-            #
-            # nn.Linear(1024, 1024),
-            # nn.ReLU(),
-            # nn.BatchNorm1d(1024),
+            nn.Linear(1024, 1024),
+            nn.ReLU(),
+            nn.BatchNorm1d(1024),
+
+            nn.Linear(1024, 1024),
+            nn.ReLU(),
+            nn.BatchNorm1d(1024),
 
             nn.Linear(1024, 1024),
             nn.ReLU(),

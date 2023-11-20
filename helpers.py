@@ -6,7 +6,11 @@ from Patent_Dataset import PatentsDataset
 import math
 from fuzzywuzzy import fuzz
 import numpy as np
-
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import pandas as pd
 
 def co_inventors_similarity(nlist1, nlist2):
     total_similarity = 0
@@ -75,6 +79,17 @@ def cosine_similarity(str1, str2):
     else:
         return dot_product / (magnitude1 * magnitude2)
 
+
+def get_x_y(df):
+    x = df[["euclidean_distance", "date_similarity", "coinventor_in_common", "location_similarities"]]
+    y_ = df["labels"].tolist()
+    y = []
+
+    for r in y_:
+        cur = int(float(r.strip("[]")))
+        y.append(cur)
+
+    return x, y
 
 def location_similarity(lat1, lon1, lat2, lon2):
     distance = haversine_distance(lat1, lon1, lat2, lon2)
