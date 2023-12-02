@@ -110,14 +110,24 @@ def timestamp_similarity(t1, t2):
     decay_factor = 0.00000001
     similarity = np.exp(-decay_factor * difference)
     return 1 - similarity
-def row_to_features(row):
+def row_to_features(row, add_cpc = False):
     # name_tensor = torch.tensor([(ord(row['disambig_inventor_name_first'][0].lower()) - ord('a')), (ord(row['disambig_inventor_name_last'][0].lower()) - ord('a'))])
     title_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_title"]))
     abstract_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_abstract"]))
     # male_flag_tensor = torch.tensor([float(row["male_flag"])])
     pos = torch.tensor([(row["latitude"] + 90)/180 , (row["longitude"]+180) / 360])
+    date = row["patent_date"]
+    date_object = datetime.strptime(date, "%Y-%m-%d")
+    year = date_object.year
+    yr = torch.tensor([(year - 1975) / 48]) # max = 2023, min = 1975, do min-max scale
 
     features = torch.cat((title_tensor, abstract_tensor), dim=0)
+    features = torch.cat((features, yr), dim=0)
+    if add_cpc:
+        cpc_columns = [f"new_cpc_column_{i}" for i in range(26)]
+        cpc = torch.tensor(row[cpc_columns])
+        features = torch.cat((features, cpc), dim=0)
+
     features = torch.cat((features, pos), dim=0).to(torch.float32)
 #     print(title_tensor)
     return features

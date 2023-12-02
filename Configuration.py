@@ -2,7 +2,7 @@ class Config():
     PATH_TO_CHECKPT = "checkpoint/additional_features.pth"
     EPOCH = 10
     LEARNING_RATE = 0.001
-    RAW_DATA_PATH = "data/newdata/filterd_with_coinventors_500000.csv"
+    RAW_DATA_PATH = "data/newdata/filterd_with_cpc_500000.csv"
     raw_data_path = "data/blocked/jaro_blocked.csv"
     renew_train_split = True
     train_data_path = "data/divided/train_set.csv"
@@ -20,3 +20,4 @@ class Config():
     BASE_TRAIN_PATH = "data/newdata/base_train.csv"
     BASE_TEST_PATH = "data/newdata/base_test.csv"
     DATASET_LENGTH = 200000
+    ADD_CPC = True

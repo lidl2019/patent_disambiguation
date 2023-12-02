@@ -16,7 +16,7 @@ class PatentsDataset(Dataset):
                 self.data[row["inventor_id"]] = []
             #             self.data[row["inventor_id"]].append(self.row_id_to_features(index))
             # key:  inventor_id, value: patent information (encoded title and abstract, date, co-inventors)
-            self.data[row["inventor_id"]].append([self.row_id_to_features(index),
+            self.data[row["inventor_id"]].append([self.row_id_to_features(index, Config.ADD_CPC),
                                                   row["patent_date"],
                                                   row["co_inventors"],
                                                   row["latitude"], row["longitude"],
@@ -79,9 +79,9 @@ class PatentsDataset(Dataset):
             print(e)
             raise e
 
-    def row_id_to_features(self, row_id):
+    def row_id_to_features(self, row_id, add_cpc = False):
         row = self.df.iloc[row_id]
-        return helpers.row_to_features(row)
+        return helpers.row_to_features(row, add_cpc)
 
     def rand_inventor_id(self):
         inventor_id = random.choice(list(self.data.keys()))
