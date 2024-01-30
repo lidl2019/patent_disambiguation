@@ -36,6 +36,8 @@ class PatentsDataset(Dataset):
                 inventions_pair.append(0)
                 self.same_inventor_list.append(inventions_pair)
 
+        self.earliest_date = pd.to_datetime(self.df['patent_date']).min()
+
         random.shuffle(self.same_inventor_list)
 
         if len(self.same_inventor_list) >= Config.DATASET_LENGTH:
@@ -45,6 +47,7 @@ class PatentsDataset(Dataset):
         self.diff_inventors_list = []
         for i in range(len(self.same_inventor_list)):
             # get patents from different inventors
+            #id0, id1 = random.sample(self.data.keys(), 2)
             id0, id1 = random.sample(list(self.data.keys()), 2)
 
             patent0 = random.choice(self.data[id0])
@@ -82,6 +85,7 @@ class PatentsDataset(Dataset):
     def row_id_to_features(self, row_id, add_cpc = False):
         row = self.df.iloc[row_id]
         return helpers.row_to_features(row, add_cpc)
+        #return helpers.row_to_features(row)
 
     def rand_inventor_id(self):
         inventor_id = random.choice(list(self.data.keys()))

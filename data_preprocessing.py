@@ -9,8 +9,6 @@ from tqdm import tqdm
 import helpers
 
 
-# print(torch.cuda.is_available())
-
 
 def rinse_data(filepath: str):
     df = pd.read_csv(filepath)

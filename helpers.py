@@ -10,6 +10,9 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import pandas as pd
 
 def co_inventors_similarity(nlist1, nlist2):
@@ -121,16 +124,44 @@ def row_to_features(row, add_cpc = False):
     year = date_object.year
     yr = torch.tensor([(year - 1975) / 48]) # max = 2023, min = 1975, do min-max scale
 
+    # day_diff_from_earliest = convert_date_to_days_from_earliest(row["patent_date"], self.earliest_date)
+    # date_tensor = torch.tensor([day_diff_from_earliest], dtype=torch.float32)
+
+    # lat_norm = (row["latitude"] + 90) / 180
+    # long_norm = (row["longitude"] + 180) / 360
+
+    # lat_long_tensor = torch.tensor([lat_norm, long_norm], dtype=torch.float32)
+
+    # features = torch.cat((title_tensor, abstract_tensor, date_tensor, lat_long_tensor), dim=0)
+
+
     features = torch.cat((title_tensor, abstract_tensor), dim=0)
     features = torch.cat((features, yr), dim=0)
     if add_cpc:
         cpc_columns = [f"new_cpc_column_{i}" for i in range(26)]
+        cpc = torch.tensor(row[cpc_columns])
         cpc = torch.tensor(row[cpc_columns])
         features = torch.cat((features, cpc), dim=0)
 
     features = torch.cat((features, pos), dim=0).to(torch.float32)
 #     print(title_tensor)
     return features
+
+from datetime import datetime
+
+def convert_date_to_days_from_earliest(date_str, earliest_date):
+    base_date = datetime(1800, 1, 1)  # January 1, 1800
+    #calculate from latest date
+    date_format = "%Y-%m-%d"  # Adjust this format according to your data format
+
+    try:
+        date_obj = datetime.strptime(date_str, date_format)
+        day_difference = (date_obj - earliest_date).days
+        return day_difference
+    except ValueError:
+        # Handle invalid date format or provide a default value
+        return 0
+
 
 
 def name_to_list(s: str):

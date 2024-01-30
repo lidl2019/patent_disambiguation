@@ -32,7 +32,7 @@ def preprocess_data():
 if __name__ == '__main__':
 
     print(f"using GPU: {torch.cuda.is_available()}")
-    # preprocess_data()
+    preprocess_data()
     train_dataset = PatentsDataset(Config.train_data_path)
     test_dataset = PatentsDataset(Config.test_data_path)
     validate_dataset = PatentsDataset(Config.validate_data_path)
