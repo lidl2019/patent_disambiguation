@@ -45,7 +45,7 @@ class Baseline():
 
 class Model():
     def __init__(self, traindataloader, testdataloader, validationdataloader=None):
-
+        self.optimal_threshold = -1
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.train_loader = traindataloader
         self.test_loader = testdataloader
@@ -74,6 +74,92 @@ class Model():
         checkpoint = torch.load(filename)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+    def prepare_visualization_dataset(self, datapath, train = True):
+
+        self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
+        self.load_checkpoint(self.model, self.optimizer, Config.PATH_TO_CHECKPT)
+
+        dataloader = self.train_loader if train else self.test_loader
+        self.model.eval()
+        self.model.to(self.device)
+        euclidean_distance = []
+        date_similarity = []
+        coinventor_in_common = []
+        location_similarities = []
+        labels = []
+        name_1 = []
+        name_2 = []
+        inventor_id1 = []
+        inventor_id2 = []
+
+        with torch.no_grad():
+            for data in tqdm(dataloader):
+                patent0, patent1, label = data
+                date0, date1 = patent0[1], patent1[1]
+                coinventor0, coinventor1 = patent0[2], patent1[2]
+                lat0, lat1 = patent0[3], patent1[3]
+                long0, long1 = patent0[4], patent1[4]
+                id1, id2 = patent0[5], patent1[5]
+                name1, name2 = patent0[6], patent1[6]
+
+                # print(latitude0[0], longitude0[0], latitude1[0], longitude1[0])
+
+                # print(len(location0), len(location0[0]))
+                coinventor0 = [helpers.name_to_list(i) for i in coinventor0]
+                coinventor1 = [helpers.name_to_list(i) for i in coinventor1]
+
+                if torch.cuda.is_available():
+                    patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
+
+                output1 = self.model(patent0)
+                output2 = self.model(patent1)
+
+
+                euclidean_dist = nn.functional.pairwise_distance(output1, output2)
+                euclidean_distance.extend(euclidean_dist.cpu().numpy())
+
+                labels.extend(label.cpu().numpy())
+
+                for d0, d1 in zip(date0, date1):
+                    date_similarity.append(helpers.timestamp_similarity(d0, d1))
+
+                for c0, c1 in zip(coinventor0, coinventor1):
+                    coinventor_in_common.append(helpers.coinventors_in_common(c0,c1))
+
+                for la0, lon0, la1, lon1 in zip(lat0, long0, lat1, long1):
+                    # print(la0, lon0, la1, lon1)
+                    location_similarities.append(helpers.location_similarity(la0, lon0, la1, lon1))
+
+                for n in name1:
+                    name_1.append(n)
+
+                for n in name2:
+                    name_2.append(n)
+
+                for i in id1:
+                    inventor_id1.append(i)
+
+                for i in id2:
+                    inventor_id2.append(i)
+        df = pd.DataFrame({
+            "euclidean_distance": euclidean_distance,
+            "date_similarity": date_similarity,
+            "coinventor_in_common": coinventor_in_common,
+            "location_similarities": location_similarities,
+            "labels": labels,
+            "name1": name_1,
+            "name2": name_2,
+            "inventor_id1": inventor_id1,
+            "inventor_id2": inventor_id2
+        })
+        df.to_csv(datapath, index=False)
+        print("saved!")
+
+
+
 
     def set_data_for_pairwise(self, datapath, train = True):
 
@@ -293,8 +379,16 @@ class Model():
         optimal_idx = np.argmax(tpr - fpr)
         optimal_threshold = thresholds[optimal_idx]
         print("Optimal threshold: ", optimal_threshold)
+        self.optimal_threshold = optimal_threshold
+
         self.evaluate(optimal_threshold)
         return optimal_threshold
+
+    def get_vector_cluster(self, threshold = 2.5):
+        t = self.optimal_threshold if self.optimal_threshold != -1 else threshold
+
+        pass
+
 
     def test_threshold_curve(self, thresholds, from_pretrain = True, filename = Config.PATH_TO_CHECKPT):
         self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)

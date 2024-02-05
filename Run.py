@@ -60,8 +60,11 @@ if __name__ == '__main__':
     # Model
     Patent_Model = Model(train_dataloader, test_dataloader, validate_dataloader)
 
-    Patent_Model.train(epoch=50, from_pretrain=False)
+    Patent_Model.train(epoch=10, from_pretrain=True)
     Patent_Model.test_ROC_Curve(from_pretrain=True)
 
-    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
-    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)
+    Patent_Model.prepare_visualization_dataset(Config.VISUAL_TRAIN_PATH, train=True)
+    Patent_Model.prepare_visualization_dataset(Config.VISUAL_TEST_PATH, train=False)
+
+    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
+    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)
