@@ -1,3 +1,4 @@
+import networkx as nx
 import pandas as pd
 import torch.cuda
 from tqdm import tqdm
@@ -92,7 +93,8 @@ class Model():
         name_2 = []
         inventor_id1 = []
         inventor_id2 = []
-
+        patent_id1 = []
+        patent_id2 = []
         with torch.no_grad():
             for data in tqdm(dataloader):
                 patent0, patent1, label = data
@@ -102,7 +104,7 @@ class Model():
                 long0, long1 = patent0[4], patent1[4]
                 id1, id2 = patent0[5], patent1[5]
                 name1, name2 = patent0[6], patent1[6]
-
+                p_id1, p_id2 = patent0[7], patent1[7]
                 # print(latitude0[0], longitude0[0], latitude1[0], longitude1[0])
 
                 # print(len(location0), len(location0[0]))
@@ -144,6 +146,13 @@ class Model():
 
                 for i in id2:
                     inventor_id2.append(i)
+
+                for p in p_id1:
+                    patent_id1.append(p)
+
+                for p in p_id2:
+                    patent_id2.append(p)
+
         df = pd.DataFrame({
             "euclidean_distance": euclidean_distance,
             "date_similarity": date_similarity,
@@ -153,12 +162,39 @@ class Model():
             "name1": name_1,
             "name2": name_2,
             "inventor_id1": inventor_id1,
-            "inventor_id2": inventor_id2
+            "inventor_id2": inventor_id2,
+            "patent_id1": patent_id1,
+            "patent_id2": patent_id2
         })
         df.to_csv(datapath, index=False)
         print("saved!")
 
+    def draw_graph_from_distance(self, path_to_data, threshold, lines=100):
+        df = pd.read_csv(path_to_data)
+        df = df[:lines]
+        inventor_map = {}
+        G = nx.Graph()
+        for index, row in df.iterrows():
+            id1 = row["patent_id1"]
+            id2 = row["patent_id2"]
+            name1 = row["name1"]
+            name2 = row["name2"]
 
+            if id1 not in inventor_map:
+                G.add_node(id1)
+                inventor_map[id1] = name1
+            if id2 not in inventor_map:
+                G.add_node(id2)
+                inventor_map[id2] = name2
+
+            distance = row["euclidean_distance"]
+
+            if distance < threshold:
+                G.add_edge(id1, id2)
+
+        nx.draw(G, with_labels=False, node_color='skyblue', node_size=100, linewidths=10, font_size=15)
+
+        return G
 
 
     def set_data_for_pairwise(self, datapath, train = True):

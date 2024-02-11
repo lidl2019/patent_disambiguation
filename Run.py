@@ -61,10 +61,11 @@ if __name__ == '__main__':
     Patent_Model = Model(train_dataloader, test_dataloader, validate_dataloader)
 
     Patent_Model.train(epoch=10, from_pretrain=True)
-    Patent_Model.test_ROC_Curve(from_pretrain=True)
+    optimal_threshold = Patent_Model.test_ROC_Curve(from_pretrain=True)
 
     Patent_Model.prepare_visualization_dataset(Config.VISUAL_TRAIN_PATH, train=True)
     Patent_Model.prepare_visualization_dataset(Config.VISUAL_TEST_PATH, train=False)
+    Patent_Model.draw_graph_from_distance(Config.VISUAL_TEST_PATH, optimal_threshold, lines = 100)
 
     # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
     # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)

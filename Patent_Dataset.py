@@ -20,10 +20,11 @@ class PatentsDataset(Dataset):
                                                   row["patent_date"],
                                                   row["co_inventors"],
                                                   row["latitude"], row["longitude"],
-                                                  # row["patent_title"],
-                                                  # row["patent_abstract"],
                                                   str(row["inventor_id"]),
-                                                  str(row["full_name"])
+                                                  str(row["full_name"]),
+                                                  str(row["patent_id"]),
+                                                  row["patent_title"],
+                                                  row["patent_abstract"],
                                                   ])
 
     #         self.fullset = {}

@@ -39,8 +39,8 @@ def set_data_for_baseline(datapath, dataloader):
         coinventor0, coinventor1 = patent0[2], patent1[2]
         lat0, lat1 = patent0[3], patent1[3]
         long0, long1 = patent0[4], patent1[4]
-        title0, title1 = patent0[5], patent1[5]
-        abstract0, abstract1 = patent0[6], patent1[6]
+        title0, title1 = patent0[8], patent1[8]
+        abstract0, abstract1 = patent0[9], patent1[9]
 
         for t0, t1 in zip(title0, title1):
             title_similarity.append(helpers.cosine_similarity(t0, t1))
