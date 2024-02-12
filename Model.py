@@ -174,6 +174,8 @@ class Model():
         df = df[:lines]
         inventor_map = {}
         G = nx.Graph()
+
+        err = set()
         for index, row in df.iterrows():
             id1 = row["patent_id1"]
             id2 = row["patent_id2"]
@@ -192,7 +194,18 @@ class Model():
             if distance < threshold:
                 G.add_edge(id1, id2)
 
-        nx.draw(G, with_labels=False, node_color='skyblue', node_size=100, linewidths=10, font_size=15)
+            if distance < threshold and int(float(row["labels"].strip("[]"))) == 1:
+                err.add(id1)
+                err.add(id2)
+
+        degrees = dict(G.degree())
+        nodes_to_remove = [node for node, degree in degrees.items() if degree < 2]
+        G.remove_nodes_from(nodes_to_remove)
+
+        color_map = ["skyblue" if node not in err else "red" for node in G]
+
+        pos = nx.spring_layout(G, iterations=50)
+        nx.draw(G, pos=pos, node_color=color_map, edge_color='gray', linewidths=0.5, font_size=3, node_size=10)
 
         return G
 
