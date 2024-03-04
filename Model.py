@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.decomposition import PCA
 import torch.cuda
 from tqdm import tqdm
 from sklearn.metrics import classification_report
@@ -179,6 +180,8 @@ class Model():
         plt.savefig("training_result.png", dpi=300)
 
     def evaluate(self, threshold, from_pretrain = True, filename = Config.PATH_TO_CHECKPT):
+        incorrectly_classified_data = []  # Initialize list to store misclassified instances
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
         if from_pretrain:
             self.load_checkpoint(self.model, self.optimizer, filename=filename)
@@ -192,6 +195,8 @@ class Model():
                 patent0, patent1, label = data
                 if torch.cuda.is_available():
                     patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
                 output1 = self.model(patent0)
                 output2 = self.model(patent1)
                 euclidean_distance = nn.functional.pairwise_distance(output1, output2)
@@ -200,8 +205,62 @@ class Model():
                             predicted.squeeze() == label.squeeze()).sum().item()  # Ensure label and predicted have the same dimensions
                 total += label.size(0)
 
+                misclassified_indices = (predicted.squeeze() != label.squeeze()).nonzero()
+                for idx in misclassified_indices:
+                    incorrectly_classified_data.append((patent0[idx], patent1[idx], label[idx]))
+
         print('Test Accuracy with threashold {:.4f}: {:.2f}%'.format(threshold, 100 * correct / total))
-        return correct / total
+        return (correct / total), incorrectly_classified_data
+
+    #evaluating misclassified data
+    def evaluate_misclassified(self, threshold, from_pretrain=True, filename=Config.PATH_TO_CHECKPT):
+        self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
+        if from_pretrain:
+            self.load_checkpoint(self.model, self.optimizer, filename=filename)
+        self.model.eval()
+        self.model.to(self.device)
+        
+        misclassified_data = []  # List to store misclassified instances
+        
+        with torch.no_grad():
+            for data in self.test_loader:
+                patent0, patent1, label = data
+                if torch.cuda.is_available():
+                    patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
+                output1 = self.model(patent0)
+                output2 = self.model(patent1)
+                euclidean_distance = nn.functional.pairwise_distance(output1, output2)
+                predicted = (euclidean_distance > threshold).float()
+                
+                # Iterate through each instance to check if it's misclassified
+                for i in range(len(label)):
+                    if predicted[i] != label[i]:
+                        # If misclassified, add the instance to misclassified_data
+                        misclassified_data.append((patent0[i], patent1[i], label[i]))
+
+        self.visualize_misclassified(misclassified_data)
+
+        # Return misclassified data for further analysis if needed
+        return misclassified_data
+
+    def visualize_misclassified(self, misclassified_data):
+        # Combine vectors of misclassified patents
+        combined_vectors = [torch.cat((patent0, patent1), dim=0) for patent0, patent1, label in misclassified_data]
+        
+        # Apply PCA for dimensionality reduction
+        pca = PCA(n_components=2)  # You can change the number of components as needed
+        reduced_vectors = pca.fit_transform(combined_vectors)
+        
+        # Plot scatter plot
+        plt.scatter(reduced_vectors[:, 0], reduced_vectors[:, 1], color='red', label='Misclassified Instances')
+        plt.xlabel('Principal Component 1')
+        plt.ylabel('Principal Component 2')
+        plt.title('PCA Visualization of Misclassified Patents')
+        plt.legend()
+        plt.show()
+        plt.savefig("PCA.png", dpi=300)
 
     def test_ROC_Curve(self, from_pretrain = True, filename = Config.PATH_TO_CHECKPT):
         self.optimizer = optim.Adam(self.model.parameters(), lr=Config.LEARNING_RATE)
@@ -217,6 +276,8 @@ class Model():
                 patent0, patent1, label = data
                 if torch.cuda.is_available():
                     patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                else:
+                    patent0, patent1, label = patent0[0], patent1[0], label
                 output1 = self.model(patent0)
                 output2 = self.model(patent1)
                 euclidean_distance = nn.functional.pairwise_distance(output1, output2)
@@ -266,6 +327,8 @@ class Model():
                     p_dates0, p_dates1 = patent0[1], patent1[1]
                     if torch.cuda.is_available():
                         patent0, patent1, label = patent0[0].cuda(), patent1[0].cuda(), label.cuda()
+                    else:
+                        patent0, patent1, label = patent0[0], patent1[0], label
                     output1 = self.model(patent0)
                     output2 = self.model(patent1)
                     euclidean_distance = nn.functional.pairwise_distance(output1, output2)
