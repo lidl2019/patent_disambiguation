@@ -169,13 +169,15 @@ class Model():
         df.to_csv(datapath, index=False)
         print("saved!")
 
-    def draw_graph_from_distance(self, path_to_data, threshold, lines=100):
+    def draw_graph_from_distance(self, path_to_data, threshold, lines=10000, filter_leaf=True, report_false_negative=False):
         df = pd.read_csv(path_to_data)
         df = df[:lines]
         inventor_map = {}
         G = nx.Graph()
 
-        err = set()
+        err = set()  # false positive
+
+        err2 = set()  # false negative
         for index, row in df.iterrows():
             id1 = row["patent_id1"]
             id2 = row["patent_id2"]
@@ -198,15 +200,43 @@ class Model():
                 err.add(id1)
                 err.add(id2)
 
+            if distance > threshold and int(float(row["labels"].strip("[]"))) == 0:
+                err2.add(id1)
+                err2.add(id2)
+
         degrees = dict(G.degree())
-        nodes_to_remove = [node for node, degree in degrees.items() if degree < 2]
+        if filter_leaf:
+            nodes_to_remove = [node for node, degree in degrees.items() if degree < 2]
+        else:
+
+            nodes_to_remove = []
         G.remove_nodes_from(nodes_to_remove)
 
-        color_map = ["skyblue" if node not in err else "red" for node in G]
+        if not report_false_negative:
+
+            color_map = ["skyblue" if node not in err else "red" for node in G]
+        else:
+
+            color_map = []
+
+            for node in G:
+                if node not in err and node not in err2:
+                    color_map.append("skyblue")
+
+                if node in err:
+                    color_map.append("red")
+
+                elif node in err2:
+                    color_map.append("yellow")
 
         pos = nx.spring_layout(G, iterations=50)
         nx.draw(G, pos=pos, node_color=color_map, edge_color='gray', linewidths=0.5, font_size=3, node_size=10)
-
+        name = "fig_output_"
+        if report_false_negative:
+            name += "with_FN_"
+        if filter_leaf:
+            name += "filtered_"
+        plt.savefig(f"{name}{lines}.png", dpi=300)
         return G
 
 

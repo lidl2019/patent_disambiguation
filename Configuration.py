@@ -10,7 +10,7 @@ class Config():
     test_data_path = "data/divided/test_set.csv"
     featured_data_export_path = "data/featured/featured.csv"
     model_weight_path = "./weights/model_weights.pth"
-    test_percentage = 0.1
+    test_percentage = 0.3
     validate_percentage = 0.1
     train_batch_size = 32
     train_number_epochs = 10

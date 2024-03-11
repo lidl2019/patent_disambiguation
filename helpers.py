@@ -105,11 +105,12 @@ def location_similarity(lat1, lon1, lat2, lon2):
 def timestamp_similarity(t1, t2):
     day1 = datetime.strptime(t1,'%Y-%m-%d')
     day2 = datetime.strptime(t2, '%Y-%m-%d')
-    difference = abs((day1 - day2).total_seconds())
+    difference = abs((day1.year - day2.year))
+    if difference > 30:
+        return 0
 
-    decay_factor = 0.00000001
-    similarity = np.exp(-decay_factor * difference)
-    return 1 - similarity
+    return 1 - (difference / 30)
+    # return 1 - similarity
 def row_to_features(row, add_cpc = False):
     # name_tensor = torch.tensor([(ord(row['disambig_inventor_name_first'][0].lower()) - ord('a')), (ord(row['disambig_inventor_name_last'][0].lower()) - ord('a'))])
     title_tensor = torch.tensor(PatentsDataset.string_to_list(row["encoded_title"]))

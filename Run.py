@@ -32,7 +32,7 @@ def preprocess_data():
 if __name__ == '__main__':
 
     print(f"using GPU: {torch.cuda.is_available()}")
-    # preprocess_data()
+    preprocess_data()
     train_dataset = PatentsDataset(Config.train_data_path)
     test_dataset = PatentsDataset(Config.test_data_path)
     validate_dataset = PatentsDataset(Config.validate_data_path)
@@ -67,5 +67,5 @@ if __name__ == '__main__':
     Patent_Model.prepare_visualization_dataset(Config.VISUAL_TEST_PATH, train=False)
     Patent_Model.draw_graph_from_distance(Config.VISUAL_TEST_PATH, optimal_threshold, lines = 100)
 
-    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
-    # Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)
+    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TRAIN_PATH, train=True)
+    Patent_Model.set_data_for_pairwise(Config.MODEL_2_TEST_PATH, train=False)
